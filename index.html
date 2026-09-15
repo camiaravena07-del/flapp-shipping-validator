@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flapp Shipping Dashboard - Grupo Axo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        select {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 15px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card h3 {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-unavailable {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #0c5aa0;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚚 Flapp Shipping Dashboard</h1>
+            <p>Verifica disponibilidad de despacho Flapp por comuna</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                ℹ️ Selecciona una comuna de la Región Metropolitana para ver qué SKUs tienen disponibilidad de despacho con Flapp.
+            </div>
+
+            <div class="form-group">
+                <label for="commune">Selecciona una Comuna:</label>
+                <select id="commune">
+                    <option value="">-- Selecciona una comuna --</option>
+                    <option value="vitacura">Vitacura</option>
+                    <option value="las_condes">Las Condes</option>
+                    <option value="santiago">Santiago</option>
+                    <option value="providencia">Providencia</option>
+                    <option value="nunoa">Ñuñoa</option>
+                    <option value="macul">Macul</option>
+                    <option value="san_miguel">San Miguel</option>
+                    <option value="iquique">Iquique</option>
+                    <option value="estacion_central">Estación Central</option>
+                    <option value="maipu">Maipú</option>
+                    <option value="san_bernardo">San Bernardo</option>
+                    <option value="puente_alto">Puente Alto</option>
+                    <option value="la_florida">La Florida</option>
+                    <option value="pirque">Pirque</option>
+                    <option value="san_jose_de_maipo">San José de Maipo</option>
+                    <option value="colina">Colina</option>
+                    <option value="lampa">Lampa</option>
+                    <option value="til_til">Til Til</option>
+                    <option value="renca">Renca</option>
+                    <option value="quilicura">Quilicura</option>
+                    <option value="conchal">Conchal</option>
+                    <option value="huechuraba">Huechuraba</option>
+                    <option value="el_bosque">El Bosque</option>
+                    <option value="la_cisterna">La Cisterna</option>
+                    <option value="la_granja">La Granja</option>
+                    <option value="la_pintana">La Pintana</option>
+                    <option value="la_reina">La Reina</option>
+                    <option value="peninuela">Peñalolén</option>
+                    <option value="pedro_aguirre_cerda">Pedro Aguirre Cerda</option>
+                    <option value="penalolen">Peñalolén</option>
+                    <option value="recoleta">Recoleta</option>
+                    <option value="san_ramon">San Ramón</option>
+                    <option value="talagante">Talagante</option>
+                    <option value="cuenca">Cuenca</option>
+                </select>
+                <button onclick="searchSKUs()">Buscar SKUs</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Cargando SKUs disponibles...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="results" id="results">
+                <h2>Resultados</h2>
+                <div class="stats" id="stats"></div>
+                <div class="table-wrapper">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Estado</th>
+                                <th>Tarifas Disponibles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configura la URL de tu API aquí
+        const API_URL = 'http://localhost:8000'; // Cambiar cuando esté en producción
+
+        async function searchSKUs() {
+            const commune = document.getElementById('commune').value;
+
+            if (!commune) {
+                showError('Por favor selecciona una comuna');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+
+            loading.classList.add('active');
+            results.classList.remove('active');
+            error.classList.remove('active');
+
+            try {
+                // Obtener lista de SKUs de tu tienda (ejemplo: hardcodeado)
+                // En producción, esto vendría de tu BD de Magento
+                const skus = [
+                    'ABC-001', 'ABC-002', 'ABC-003', 'ABC-004', 'ABC-005',
+                    'XYZ-001', 'XYZ-002', 'XYZ-003', 'XYZ-004', 'XYZ-005'
+                ];
+
+                // Aquí consultarías tu API para cada SKU
+                const results_data = [];
+                let availableCount = 0;
+
+                for (const sku of skus) {
+                    try {
+                        const response = await fetch(
+                            `${API_URL}/api/check-availability?sku=${sku}&address1=test&commune=${commune}&latitude=-33.4015&longitude=-70.5866&phone=56912345678`
+                        );
+                        const data = await response.json();
+
+                        if (data.available) {
+                            availableCount++;
+                            results_data.push({
+                                sku,
+                                available: true,
+                                rates: data.rates ? data.rates.length : 0,
+                                error: null
+                            });
+                        } else {
+                            results_data.push({
+                                sku,
+                                available: false,
+                                rates: 0,
+                                error: data.error
+                            });
+                        }
+                    } catch (err) {
+                        results_data.push({
+                            sku,
+                            available: false,
+                            rates: 0,
+                            error: err.message
+                        });
+                    }
+                }
+
+                displayResults(results_data, availableCount, skus.length);
+
+            } catch (err) {
+                showError(`Error: ${err.message}`);
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        function displayResults(data, availableCount, totalCount) {
+            const results = document.getElementById('results');
+            const stats = document.getElementById('stats');
+            const resultsBody = document.getElementById('resultsBody');
+
+            // Actualizar estadísticas
+            stats.innerHTML = `
+                <div class="stat-card">
+                    <h3>Total SKUs</h3>
+                    <div class="value">${totalCount}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Con Flapp</h3>
+                    <div class="value" style="color: #28a745;">${availableCount}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Sin Flapp</h3>
+                    <div class="value" style="color: #dc3545;">${totalCount - availableCount}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Cobertura</h3>
+                    <div class="value">${((availableCount / totalCount) * 100).toFixed(1)}%</div>
+                </div>
+            `;
+
+            // Llenar tabla
+            resultsBody.innerHTML = data.map(item => `
+                <tr>
+                    <td><strong>${item.sku}</strong></td>
+                    <td>
+                        ${item.available ?
+                            '<span class="badge badge-available">✓ Disponible</span>' :
+                            '<span class="badge badge-unavailable">✗ No disponible</span>'
+                        }
+                    </td>
+                    <td>${item.available ? `${item.rates} opciones` : 'N/A'}</td>
+                </tr>
+            `).join('');
+
+            results.classList.add('active');
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.add('active');
+        }
+    </script>
+</body>
+</html>
