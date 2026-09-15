@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flapp Shipping Widget - Ejemplo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .widget {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+            display: none;
+        }
+
+        .widget.active {
+            display: block;
+        }
+
+        .widget-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .rates-list {
+            list-style: none;
+        }
+
+        .rate-item {
+            padding: 12px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+
+        .rate-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .rate-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .rate-price {
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .rate-eta {
+            color: #999;
+        }
+
+        .error-box {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
+            display: none;
+        }
+
+        .error-box.active {
+            display: block;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
+            color: #2e7d32;
+            display: none;
+        }
+
+        .success-box.active {
+            display: block;
+        }
+
+        .unavailable-box {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+            color: #e65100;
+            display: none;
+        }
+
+        .unavailable-box.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚚 Validador Flapp Shipping</h1>
+        <p class="subtitle">Verifica disponibilidad de despacho con Flapp para un producto</p>
+
+        <form id="checkForm">
+            <div class="grid">
+                <div class="form-group">
+                    <label for="sku">SKU del Producto *</label>
+                    <input type="text" id="sku" name="sku" value="ABC-001" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Teléfono *</label>
+                    <input type="tel" id="phone" name="phone" value="56912345678" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address1">Dirección *</label>
+                    <input type="text" id="address1" name="address1" value="Av. Kennedy 4700" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="commune">Comuna *</label>
+                    <input type="text" id="commune" name="commune" value="vitacura" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="latitude">Latitud *</label>
+                    <input type="number" id="latitude" name="latitude" value="-33.4015" step="0.0001" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="longitude">Longitud *</label>
+                    <input type="number" id="longitude" name="longitude" value="-70.5866" step="0.0001" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="apiUrl">URL de la API *</label>
+                <input type="url" id="apiUrl" name="apiUrl" value="http://localhost:8000" required>
+            </div>
+
+            <button type="submit">Consultar Disponibilidad</button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            Consultando a Flapp...
+        </div>
+
+        <div class="widget" id="widget">
+            <div class="error-box" id="errorBox"></div>
+            <div class="unavailable-box" id="unavailableBox">
+                No hay disponibilidad de Flapp en esta dirección
+            </div>
+            <div class="success-box" id="successBox">
+                <div class="widget-header">✓ Flapp está disponible en tu zona</div>
+                <ul class="rates-list" id="ratesList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('checkForm');
+        const loading = document.getElementById('loading');
+        const widget = document.getElementById('widget');
+        const errorBox = document.getElementById('errorBox');
+        const successBox = document.getElementById('successBox');
+        const unavailableBox = document.getElementById('unavailableBox');
+        const ratesList = document.getElementById('ratesList');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Reset UI
+            widget.classList.remove('active');
+            errorBox.classList.remove('active');
+            successBox.classList.remove('active');
+            unavailableBox.classList.remove('active');
+            ratesList.innerHTML = '';
+            loading.classList.add('active');
+
+            const sku = document.getElementById('sku').value;
+            const phone = document.getElementById('phone').value;
+            const address1 = document.getElementById('address1').value;
+            const commune = document.getElementById('commune').value;
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            const apiUrl = document.getElementById('apiUrl').value;
+
+            try {
+                const url = new URL(`${apiUrl}/api/check-availability`);
+                url.searchParams.append('sku', sku);
+                url.searchParams.append('phone', phone);
+                url.searchParams.append('address1', address1);
+                url.searchParams.append('commune', commune);
+                url.searchParams.append('latitude', latitude);
+                url.searchParams.append('longitude', longitude);
+
+                const response = await fetch(url.toString());
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                widget.classList.add('active');
+
+                if (data.error) {
+                    errorBox.textContent = `❌ Error: ${data.error}`;
+                    errorBox.classList.add('active');
+                } else if (data.available) {
+                    successBox.classList.add('active');
+
+                    // Mostrar tarifas
+                    data.rates.forEach(rate => {
+                        const li = document.createElement('li');
+                        li.className = 'rate-item';
+                        li.innerHTML = `
+                            <div class="rate-title">${rate.title || 'Envío'}</div>
+                            <div class="rate-info">
+                                <span class="rate-price">$${(rate.price || 0).toLocaleString('es-CL')}</span>
+                                <span class="rate-eta">${new Date(rate.eta).toLocaleString('es-CL')}</span>
+                            </div>
+                            <div class="rate-info">
+                                <span style="color: #999; font-size: 12px;">${rate.description || rate.shippingType || ''}</span>
+                            </div>
+                        `;
+                        ratesList.appendChild(li);
+                    });
+                } else {
+                    unavailableBox.classList.add('active');
+                }
+
+            } catch (err) {
+                loading.classList.remove('active');
+                widget.classList.add('active');
+                errorBox.textContent = `❌ Error de conexión: ${err.message}`;
+                errorBox.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
