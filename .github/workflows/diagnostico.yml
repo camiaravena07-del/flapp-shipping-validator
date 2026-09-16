@@ -1,0 +1,29 @@
+name: Diagnostico Flapp
+
+# Solo se corre a mano. Es temporal: cuando sepamos el formato correcto,
+# se borra este archivo junto con diagnostico.py
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnosticar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Bajar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install requests python-dotenv
+
+      - name: Probar combinaciones contra Flapp
+        env:
+          FLAPP_API_KEY: ${{ secrets.FLAPP_API_KEY }}
+          FLAPP_API_SECRET: ${{ secrets.FLAPP_API_SECRET }}
+        run: python diagnostico.py
