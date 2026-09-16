@@ -1,0 +1,49 @@
+name: Actualizar datos de Flapp
+
+# Cuando corre:
+#  - Todos los lunes a las 10:00 UTC (entre 6 y 7 AM en Chile segun horario)
+#  - Cuando lo aprietas a mano desde la pestana Actions
+on:
+  schedule:
+    - cron: "0 10 * * 1"
+  workflow_dispatch:
+
+# Necesario para que el robot pueda escribir datos.json de vuelta al repo
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Bajar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install requests python-dotenv
+
+      - name: Consultar Flapp y generar datos.json
+        env:
+          FLAPP_API_KEY: ${{ secrets.FLAPP_API_KEY }}
+          FLAPP_API_SECRET: ${{ secrets.FLAPP_API_SECRET }}
+          FLAPP_ENV: production
+        run: python generar_datos.py
+
+      - name: Guardar datos.json en el repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add datos.json
+          if git diff --staged --quiet; then
+            echo "Los datos no cambiaron, no hay nada que guardar."
+          else
+            git commit -m "Actualizar datos de Flapp ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+            git push
+          fi
